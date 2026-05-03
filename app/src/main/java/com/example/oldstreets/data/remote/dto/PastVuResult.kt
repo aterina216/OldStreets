@@ -3,10 +3,6 @@ package com.example.oldstreets.data.remote.dto
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class PastVuPhoto (
-    val cid: Int,
-    val title: String,
-    val year: String?,
-    val file: String
+data class PastVuResult(
+    val photos: List<PastVuPhoto>
 )
-

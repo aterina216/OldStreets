@@ -1,6 +1,7 @@
 package com.example.oldstreets.di
 
 import com.example.oldstreets.data.remote.api.DataApi
+import com.example.oldstreets.data.remote.api.PastVuApi
 import com.squareup.moshi.KotlinJsonAdapterFactory
 import com.squareup.moshi.Moshi
 import dagger.Module
@@ -53,5 +54,16 @@ class NetworkModule {
     @Singleton
     fun provideDataToken(): String {
         return "c07b7b1e7178e79da23e8f662572fbe7ccbc1824"
+    }
+
+    @Provides
+    @Singleton
+    fun providePastVuApi(moshi: MoshiConverterFactory): PastVuApi {
+        return Retrofit.Builder()
+            .baseUrl("https://api.pastvu.com/")
+            .addConverterFactory(moshi)
+            .build()
+            .create(PastVuApi::class.java)
+
     }
 }

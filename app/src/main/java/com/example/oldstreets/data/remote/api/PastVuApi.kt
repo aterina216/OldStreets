@@ -9,6 +9,6 @@ interface PastVuApi {
     @GET("api2")
     suspend fun getNearestPhotos(
         @Query("method") method: String = "photo.giveNearestPhotos",
-        @Query("params") params: String
+        @Query("params") paramsJson: String
     ): PastVuResponse
 }

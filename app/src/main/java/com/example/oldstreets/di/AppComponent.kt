@@ -5,7 +5,8 @@ import com.example.oldstreets.OldStreetApp
 import dagger.Component
 import javax.inject.Singleton
 
-@Component(modules = [NetworkModule::class, RepositoryModule::class, ViewmodelFactoryModule::class])
+@Component(modules = [NetworkModule::class, RepositoryModule::class, ViewmodelFactoryModule::class,
+    PhotoRepoModule::class])
 @Singleton
 interface AppComponent {
     fun inject(app: OldStreetApp)

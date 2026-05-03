@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Query
 import com.example.oldstreets.domain.model.City
+import com.example.oldstreets.domain.model.HistoricalPhoto
 import com.example.oldstreets.domain.model.Street
 import com.example.oldstreets.domain.repository.AddressRepository
+import com.example.oldstreets.domain.repository.PhotoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel(private val adressRepository: AddressRepository) : ViewModel() {
+class MainViewModel(private val adressRepository: AddressRepository,
+    private val photoRepository: PhotoRepository) : ViewModel() {
 
     private var _cities = MutableStateFlow<List<City>>(emptyList())
     val cities: StateFlow<List<City>> = _cities
@@ -27,6 +31,12 @@ class MainViewModel(private val adressRepository: AddressRepository) : ViewModel
 
     private var _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+
+    private var _photos = MutableStateFlow<List<HistoricalPhoto>>(emptyList())
+    val photos: StateFlow<List<HistoricalPhoto>> = _photos.asStateFlow()
+
+    private var _isLoadingPhotos = MutableStateFlow(false)
+    val isLoadingPhotos: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     fun searchCities(query: String) {
         Log.d("ViewModel", "searchCities called with query: $query")
@@ -76,6 +86,7 @@ class MainViewModel(private val adressRepository: AddressRepository) : ViewModel
             try {
                 val coords = adressRepository.getCoordinates(streerFiasId)
                 _coordinates.value = coords
+                coords?.let { loadHistoricalPhotos(it.first, it.second) }
             }
             catch (e: Exception) {
                 _error.value = e.message
@@ -87,5 +98,23 @@ class MainViewModel(private val adressRepository: AddressRepository) : ViewModel
     }
     fun clearError() {
         _error.value = null
+    }
+
+    fun loadHistoricalPhotos(lat: Double, lon: Double) {
+        viewModelScope.launch {
+            _isLoadingPhotos.value = true
+
+            try {
+                val result = photoRepository.getHistoricalPhotos(lat, lon)
+                _photos.value = result
+            }
+            catch (e: Exception) {
+                Log.e("MainViewModel", "Не удалось загрузить фото", e)
+                _photos.value = emptyList()
+            }
+            finally {
+                _isLoadingPhotos.value = false
+            }
+        }
     }
 }
