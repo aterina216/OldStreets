@@ -63,8 +63,8 @@ fun LocationScreen(viewModel: MainViewModel) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         ExposedDropdownMenuBox(
-            expanded = cities.isNotEmpty() && cityInput.isNotBlank(),
-            onExpandedChange = { expandedCities = !expandedCities}
+            expanded = expandedCities && cities.isNotEmpty(),
+            onExpandedChange = { expandedCities = it}
         ) {
             OutlinedTextField(
                 value = cityInput,
@@ -83,7 +83,7 @@ fun LocationScreen(viewModel: MainViewModel) {
             )
             ExposedDropdownMenu(
                 expanded = cities.isNotEmpty() && expandedCities,
-                onDismissRequest = {}
+                onDismissRequest = {expandedCities = false}
             ) {
                 cities.forEach {
                     city ->
@@ -102,8 +102,7 @@ fun LocationScreen(viewModel: MainViewModel) {
             }
         }
         ExposedDropdownMenuBox(
-            expanded = streets.isNotEmpty() && streetInput.isNotBlank() &&
-            selectedCityFiasId != null && streetMenuExpanded,
+            expanded = streets.isNotEmpty() && selectedCityFiasId != null && streetMenuExpanded,
             onExpandedChange = {streetMenuExpanded = it}
         ) {
             OutlinedTextField(
@@ -124,9 +123,9 @@ fun LocationScreen(viewModel: MainViewModel) {
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(false) }
             )
             ExposedDropdownMenu(
-                expanded = streets.isNotEmpty() && streetInput.isNotBlank() &&
+                expanded = streets.isNotEmpty() &&
                 selectedCityFiasId != null && streetMenuExpanded,
-                onDismissRequest = {}
+                onDismissRequest = { streetMenuExpanded = false}
             ) {
                 streets.forEach {
                     street ->
@@ -172,7 +171,7 @@ fun LocationScreen(viewModel: MainViewModel) {
                     columns = GridCells.Fixed(2),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.height(300.dp)
+                    modifier = Modifier.weight(1f).fillMaxWidth()
                 ) {
                     items(photos) {
                         photo ->

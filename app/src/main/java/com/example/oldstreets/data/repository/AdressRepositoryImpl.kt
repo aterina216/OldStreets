@@ -1,6 +1,7 @@
 package com.example.oldstreets.data.repository
 
 import android.util.Log
+import com.example.oldstreets.data.remote.api.ApiKey
 import com.example.oldstreets.data.remote.api.DataApi
 import com.example.oldstreets.domain.model.City
 import com.example.oldstreets.domain.model.Street
@@ -8,7 +9,7 @@ import com.example.oldstreets.domain.repository.AddressRepository
 import javax.inject.Inject
 
 class AdressRepositoryImpl @Inject constructor
-    (private val api: DataApi, private val token: String): AddressRepository {
+    (private val api: DataApi): AddressRepository {
     override suspend fun suggestSities(query: String): List<City> {
         Log.d("DaData", "=== suggestCities CALLED with query: $query ===")
         val body = mapOf(
@@ -16,7 +17,7 @@ class AdressRepositoryImpl @Inject constructor
             "from_bound" to mapOf("value" to "city"),
             "to_bound" to mapOf("value" to "city")
         )
-        val response = api.suggestAddress("Token $token", body)
+        val response = api.suggestAddress(ApiKey.API_KEY, body)
         Log.d("DaData", "Response suggestions count: ${response.suggestions.size}")
         return response.suggestions.mapNotNull {
             suggestion ->
@@ -40,7 +41,7 @@ class AdressRepositoryImpl @Inject constructor
             "from_bound" to mapOf("value" to "street"),
             "to_bound" to mapOf("value" to "street")
         )
-        val response = api.suggestAddress("Token $token", body)
+        val response = api.suggestAddress(ApiKey.API_KEY, body)
         return response.suggestions.mapNotNull { suggestion ->
             suggestion.data.street?.let {
                 streetName ->
@@ -61,7 +62,7 @@ class AdressRepositoryImpl @Inject constructor
             "to_bound" to mapOf("value" to "street")
         )
 
-        val response = api.suggestAddress("Token $token", body)
+        val response = api.suggestAddress(ApiKey.API_KEY, body)
         val suggestion = response.suggestions.firstOrNull()
         val lat = suggestion?.data?.lat?.toDoubleOrNull()
         val lon = suggestion?.data?.lon?.toDoubleOrNull()

@@ -50,11 +50,6 @@ class NetworkModule {
             .create(DataApi::class.java)
     }
 
-    @Provides
-    @Singleton
-    fun provideDataToken(): String {
-        return "c07b7b1e7178e79da23e8f662572fbe7ccbc1824"
-    }
 
     @Provides
     @Singleton
