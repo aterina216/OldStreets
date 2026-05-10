@@ -17,7 +17,7 @@ class AdressRepositoryImpl @Inject constructor
             "from_bound" to mapOf("value" to "city"),
             "to_bound" to mapOf("value" to "city")
         )
-        val response = api.suggestAddress(ApiKey.API_KEY, body)
+        val response = api.suggestAddress("Token ${ApiKey.API_KEY}", body)
         Log.d("DaData", "Response suggestions count: ${response.suggestions.size}")
         return response.suggestions.mapNotNull {
             suggestion ->
@@ -41,7 +41,7 @@ class AdressRepositoryImpl @Inject constructor
             "from_bound" to mapOf("value" to "street"),
             "to_bound" to mapOf("value" to "street")
         )
-        val response = api.suggestAddress(ApiKey.API_KEY, body)
+        val response = api.suggestAddress("Token ${ApiKey.API_KEY}", body)
         return response.suggestions.mapNotNull { suggestion ->
             suggestion.data.street?.let {
                 streetName ->
@@ -62,7 +62,7 @@ class AdressRepositoryImpl @Inject constructor
             "to_bound" to mapOf("value" to "street")
         )
 
-        val response = api.suggestAddress(ApiKey.API_KEY, body)
+        val response = api.suggestAddress("Token ${ApiKey.API_KEY}", body)
         val suggestion = response.suggestions.firstOrNull()
         val lat = suggestion?.data?.lat?.toDoubleOrNull()
         val lon = suggestion?.data?.lon?.toDoubleOrNull()
