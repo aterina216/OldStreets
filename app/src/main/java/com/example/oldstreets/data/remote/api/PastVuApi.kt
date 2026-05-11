@@ -1,7 +1,7 @@
 package com.example.oldstreets.data.remote.api
 
 
-import com.example.oldstreets.data.remote.dto.PastVuResponse
+import com.example.oldstreets.data.remote.dto.pastvu.PastVuResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

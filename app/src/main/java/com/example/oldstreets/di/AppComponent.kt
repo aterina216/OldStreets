@@ -6,7 +6,7 @@ import dagger.Component
 import javax.inject.Singleton
 
 @Component(modules = [NetworkModule::class, RepositoryModule::class, ViewmodelFactoryModule::class,
-    PhotoRepoModule::class])
+    PhotoRepoModule::class, PhotoDataSourceModule::class])
 @Singleton
 interface AppComponent {
     fun inject(app: OldStreetApp)

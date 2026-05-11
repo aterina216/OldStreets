@@ -18,5 +18,4 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun provideRepository(repository: AdressRepositoryImpl): AddressRepository
 
-
 }

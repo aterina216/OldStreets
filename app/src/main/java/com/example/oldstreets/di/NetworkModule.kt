@@ -1,5 +1,6 @@
 package com.example.oldstreets.di
 
+import com.example.oldstreets.data.remote.api.CommonsApi
 import com.example.oldstreets.data.remote.api.DataApi
 import com.example.oldstreets.data.remote.api.PastVuApi
 import com.squareup.moshi.KotlinJsonAdapterFactory
@@ -60,5 +61,16 @@ class NetworkModule {
             .build()
             .create(PastVuApi::class.java)
 
+    }
+
+    @Provides
+    @Singleton
+    fun provideCommonsApi(okHttpClient: OkHttpClient): CommonsApi {
+        return Retrofit.Builder()
+            .baseUrl("https://commons.wikimedia.org/")
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+            .create(CommonsApi::class.java)
     }
 }

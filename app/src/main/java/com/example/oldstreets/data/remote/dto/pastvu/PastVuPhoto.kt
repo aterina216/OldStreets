@@ -1,4 +1,4 @@
-package com.example.oldstreets.data.remote.dto
+package com.example.oldstreets.data.remote.dto.pastvu
 
 import com.squareup.moshi.JsonClass
 
@@ -9,4 +9,3 @@ data class PastVuPhoto (
     val year: String?,
     val file: String
 )
-
