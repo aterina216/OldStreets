@@ -25,13 +25,13 @@ import coil.request.ImageRequest
 import com.example.oldstreets.domain.model.HistoricalPhoto
 
 @Composable
-fun HistoricalPhotoCard(photo: HistoricalPhoto) {
+fun HistoricalPhotoCard(photo: HistoricalPhoto, onClick: () -> Unit) {
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .clickable {},
+            .clickable { onClick() },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(4.dp)

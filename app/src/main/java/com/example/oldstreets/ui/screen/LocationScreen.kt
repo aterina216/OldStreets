@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,13 +48,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.example.oldstreets.ui.components.HistoricalPhotoCard
 import com.example.oldstreets.ui.components.RetroInputField
 import com.example.oldstreets.ui.viewmodel.MainViewModel
+import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationScreen(viewModel: MainViewModel) {
+fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
 
     val cities by viewModel.cities.collectAsStateWithLifecycle()
     val streets by viewModel.streets.collectAsStateWithLifecycle()
@@ -61,10 +64,10 @@ fun LocationScreen(viewModel: MainViewModel) {
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
-    var cityInput by remember { mutableStateOf("") }
-    var selectedCityFiasId by remember { mutableStateOf<String?>(null) }
-    var streetInput by remember { mutableStateOf("") }
-    var selectedStreetFiasId by remember { mutableStateOf<String?>(null) }
+    var cityInput by rememberSaveable{ mutableStateOf("") }
+    var selectedCityFiasId by rememberSaveable { mutableStateOf<String?>(null) }
+    var streetInput by rememberSaveable { mutableStateOf("") }
+    var selectedStreetFiasId by rememberSaveable { mutableStateOf<String?>(null) }
 
     var expandedCities by remember { mutableStateOf(false) }
     var streetMenuExpanded by remember { mutableStateOf(false) }
@@ -258,7 +261,13 @@ fun LocationScreen(viewModel: MainViewModel) {
                         .weight(1f)
                 ) {
                     items(photos) { photo ->
-                        HistoricalPhotoCard(photo)
+                        HistoricalPhotoCard(photo,
+                            onClick = {
+                                val encodeUrl = URLEncoder.encode(photo.imageUrl, "UTF-8")
+                                val encodeTitle = URLEncoder.encode(photo.title, "UTF-8")
+                                val yearStr = photo.year?.toString() ?: "null"
+                                navController.navigate("photo/$encodeUrl/$encodeTitle/$yearStr")
+                            })
                     }
                 }
             }

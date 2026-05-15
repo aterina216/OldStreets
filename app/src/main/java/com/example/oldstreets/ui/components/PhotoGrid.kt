@@ -36,7 +36,7 @@ fun PhotoGrid(
     ) {
         items(photos) {
             photo ->
-            HistoricalPhotoCard(photo)
+            //HistoricalPhotoCard(photo)
         }
     }
 }

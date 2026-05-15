@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModelProvider
+import com.example.oldstreets.ui.navigation.InitNavigation
 import com.example.oldstreets.ui.screen.LocationScreen
 import com.example.oldstreets.ui.theme.OldStreetsTheme
 import com.example.oldstreets.ui.viewmodel.MainViewModel
@@ -35,7 +36,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             OldStreetsTheme {
-                LocationScreen(viewModel)
+                InitNavigation(viewModel)
             }
         }
     }
