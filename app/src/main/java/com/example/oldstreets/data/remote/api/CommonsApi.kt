@@ -16,6 +16,6 @@ interface CommonsApi {
         @Query("ggslimit") limit: Int = 1000,
         @Query("ggsnamespace") namespace: Int = 6,
         @Query("prop") prop: String = "imageinfo",
-        @Query("iiprop") iiprop: String = "url|thumburl"
+        @Query("iiprop") iiprop: String = "url"
     ): CommonsPhotoResponse
 }

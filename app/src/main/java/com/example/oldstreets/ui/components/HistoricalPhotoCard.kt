@@ -41,6 +41,7 @@ fun HistoricalPhotoCard(photo: HistoricalPhoto, onClick: () -> Unit) {
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(photo.imageUrl)
                     .crossfade(true)
+                    .addHeader("User-Agent", "OldStreetsApp/1.0 (https://github.com/aterina216/OldStreets; ater.93@mail.ru)")
                     .build(),
                 contentDescription = photo.title,
                 modifier = Modifier.fillMaxSize(),

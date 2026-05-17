@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.oldstreets.ui.components.HistoricalPhotoCard
 import com.example.oldstreets.ui.components.RetroInputField
 import com.example.oldstreets.ui.viewmodel.MainViewModel
@@ -64,7 +68,7 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
-    var cityInput by rememberSaveable{ mutableStateOf("") }
+    var cityInput by rememberSaveable { mutableStateOf("") }
     var selectedCityFiasId by rememberSaveable { mutableStateOf<String?>(null) }
     var streetInput by rememberSaveable { mutableStateOf("") }
     var selectedStreetFiasId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -72,8 +76,12 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
     var expandedCities by remember { mutableStateOf(false) }
     var streetMenuExpanded by remember { mutableStateOf(false) }
 
-    val photos by viewModel.photos.collectAsStateWithLifecycle()
-    val isLoadingPhotos by viewModel.isLoadingPhotos.collectAsStateWithLifecycle()
+    val photos = viewModel.photos.collectAsLazyPagingItems()
+
+    LaunchedEffect(photos.itemCount) {
+        Log.d("UI_DEBUG", "photos.itemCount = ${photos.itemCount}")
+        Log.d("UI_DEBUG", "photos.loadState.refresh = ${photos.loadState.refresh}")
+    }
 
     Column(
         modifier = Modifier
@@ -171,8 +179,12 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
                 },
                 label = { Text("Улица") },
                 enabled = selectedCityFiasId != null,
-                placeholder = {Text("Выберите улицу", color = MaterialTheme.colorScheme.onSurface
-                    .copy(alpha = 0.5f))},
+                placeholder = {
+                    Text(
+                        "Выберите улицу", color = MaterialTheme.colorScheme.onSurface
+                            .copy(alpha = 0.5f)
+                    )
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
@@ -187,8 +199,10 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
                 expanded = streets.isNotEmpty() &&
                         selectedCityFiasId != null && streetMenuExpanded,
                 onDismissRequest = { streetMenuExpanded = false },
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface,
-                    MaterialTheme.shapes.medium)
+                modifier = Modifier.background(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.shapes.medium
+                )
             ) {
                 streets.forEach { street ->
                     DropdownMenuItem(
@@ -205,9 +219,11 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
         }
 
         if (isLoading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(),
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            )
         }
 
         error?.let {
@@ -222,7 +238,7 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
                 shape = MaterialTheme.shapes.small
             )
         }
-        if (coordinates != null && selectedCityFiasId != null) {
+        if (coordinates != null && selectedStreetFiasId != null) {
             Text(
                 text = "Фотографии прошлого",
                 fontSize = 20.sp,
@@ -230,44 +246,78 @@ fun LocationScreen(viewModel: MainViewModel, navController: NavController) {
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
             )
-            if (isLoadingPhotos) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            } else if (photos.isEmpty()) {
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    shape = MaterialTheme.shapes.large,
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Text(
-                        "Фотографии не найдены\nПопробуйте другой адрес",
-                        modifier = Modifier.padding(24.dp),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+            when (val refreshState = photos.loadState.refresh) {
+                is LoadState.Loading -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
                 }
 
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                ) {
-                    items(photos) { photo ->
-                        HistoricalPhotoCard(photo,
-                            onClick = {
-                                val encodeUrl = URLEncoder.encode(photo.imageUrl, "UTF-8")
-                                val encodeTitle = URLEncoder.encode(photo.title, "UTF-8")
-                                val yearStr = photo.year?.toString() ?: "null"
-                                navController.navigate("photo/$encodeUrl/$encodeTitle/$yearStr")
-                            })
+                is LoadState.Error -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(
+                                alpha = 0.1f
+                            )
+                        ),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Ошибка загрузки фото", color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = { photos.retry() }) {
+                            }
+                            Text("Повторить")
+                        }
+                    }
+                }
+
+                else -> {
+                    Log.d("UI_DEBUG", "Вошли в else, photos.itemCount = ${photos.itemCount}")
+                    if (photos.itemCount == 0) {
+                        Log.d("UI_DEBUG", "Фото не найдены, показываем карточку")
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            shape = MaterialTheme.shapes.large,
+                            elevation = CardDefaults.cardElevation(2.dp)
+                        ) {
+                            Text(
+                                "Фотографии не найдены\nПопробуйте другой адрес",
+                                modifier = Modifier.padding(24.dp),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+
+                    } else {
+                        Log.d("UI_DEBUG", "Начинаем отрисовку сетки, фото: ${photos.itemCount}")
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            items(photos.itemCount) { index ->
+                                photos[index]?.let { photo ->
+                                    HistoricalPhotoCard(
+                                        photo,
+                                        onClick = {
+                                            viewModel.selectPhoto(photo)
+                                            navController.navigate("photo")
+                                        })
+                                }
+                            }
+                        }
+
                     }
                 }
             }

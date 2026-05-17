@@ -8,5 +8,5 @@ data class Page(
     @Json(name = "pageid") val pageId: Int,
     @Json(name = "ns") val ns: Int,
     @Json(name = "title") val title: String,
-    @Json(name = "imageInfo") val imageInfo: List<ImageInfo>?
+    @Json(name = "imageinfo") val imageInfo: List<ImageInfo>?
 )

@@ -3,15 +3,21 @@ package com.example.oldstreets.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import androidx.room.Query
 import com.example.oldstreets.domain.model.City
 import com.example.oldstreets.domain.model.HistoricalPhoto
 import com.example.oldstreets.domain.model.Street
 import com.example.oldstreets.domain.repository.AddressRepository
 import com.example.oldstreets.domain.repository.PhotoRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val adressRepository: AddressRepository,
@@ -32,8 +38,23 @@ class MainViewModel(private val adressRepository: AddressRepository,
     private var _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    private var _photos = MutableStateFlow<List<HistoricalPhoto>>(emptyList())
-    val photos: StateFlow<List<HistoricalPhoto>> = _photos.asStateFlow()
+    private val _selectedPhoto = MutableStateFlow<HistoricalPhoto?>(null)
+    val selectedPhoto: StateFlow<HistoricalPhoto?> = _selectedPhoto.asStateFlow()
+
+    fun selectPhoto(photo: HistoricalPhoto) {
+        _selectedPhoto.value = photo
+    }
+
+    fun clearSelectedPhoto() {
+        _selectedPhoto.value = null
+    }
+
+    val photos: Flow<PagingData<HistoricalPhoto>> = _coordinates
+        .filterNotNull()
+        .flatMapLatest { (lat, lon) ->
+            photoRepository.getHistoricalPhotos(lat, lon)
+                .cachedIn(viewModelScope)
+        }
 
     private var _isLoadingPhotos = MutableStateFlow(false)
     val isLoadingPhotos: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -86,7 +107,6 @@ class MainViewModel(private val adressRepository: AddressRepository,
             try {
                 val coords = adressRepository.getCoordinates(streerFiasId)
                 _coordinates.value = coords
-                coords?.let { loadHistoricalPhotos(it.first, it.second) }
             }
             catch (e: Exception) {
                 _error.value = e.message
@@ -100,21 +120,4 @@ class MainViewModel(private val adressRepository: AddressRepository,
         _error.value = null
     }
 
-    fun loadHistoricalPhotos(lat: Double, lon: Double) {
-        viewModelScope.launch {
-            _isLoadingPhotos.value = true
-
-            try {
-                val result = photoRepository.getHistoricalPhotos(lat, lon)
-                _photos.value = result
-            }
-            catch (e: Exception) {
-                Log.e("MainViewModel", "Не удалось загрузить фото", e)
-                _photos.value = emptyList()
-            }
-            finally {
-                _isLoadingPhotos.value = false
-            }
-        }
-    }
 }

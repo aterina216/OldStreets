@@ -20,6 +20,14 @@ class NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor {
+                chain ->
+                val original = chain.request()
+                val request = original.newBuilder()
+                    .header("User-Agent", "OldStreetsApp/1.0 (https://github.com/aterina216/OldStreets; ater.93@mail.ru)")
+                    .build()
+                    chain.proceed(request)
+            }
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }).build()

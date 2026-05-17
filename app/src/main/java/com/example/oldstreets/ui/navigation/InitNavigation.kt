@@ -1,6 +1,9 @@
 package com.example.oldstreets.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,26 +24,15 @@ fun InitNavigation(viewModel: MainViewModel) {
         composable("home") {
             LocationScreen(viewModel, navController)
         }
-        composable(
-            route = "photo/{url}/{title}/{year}",
-            arguments = listOf(
-                navArgument("url") { type = NavType.StringType },
-                navArgument("title") { type = NavType.StringType },
-                navArgument("year") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val url = backStackEntry.arguments?.getString("url")?.let { URLDecoder.decode(it, "UTF-8") } ?: return@composable
-            val title = backStackEntry.arguments?.getString("title")?.let { URLDecoder.decode(it, "UTF-8") } ?: ""
-            val yearStr = backStackEntry.arguments?.getString("year")
-            val year = if (yearStr == "null") null else yearStr?.toIntOrNull()
-
-            val photo = HistoricalPhoto(
-                id = 0, // id не используется, можно 0 или передать отдельным параметром если нужно
-                title = title,
-                imageUrl = url,
-                year = year
-            )
-            PhotoDetailScreen(navController, photo)
+        composable("photo") {
+            val photo by viewModel.selectedPhoto.collectAsState()
+            photo?.let {
+                PhotoDetailScreen(navController, it)
+            } ?: run {
+                LaunchedEffect(Unit) {
+                    navController.navigate("home")
+                }
+            }
         }
     }
 }

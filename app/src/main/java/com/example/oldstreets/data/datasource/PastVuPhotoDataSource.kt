@@ -1,5 +1,8 @@
 package com.example.oldstreets.data.datasource
 
+import android.util.Log
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import com.example.oldstreets.data.remote.api.PastVuApi
 import com.example.oldstreets.domain.model.HistoricalPhoto
 import com.example.oldstreets.domain.repository.PhotoDataSource
@@ -13,23 +16,55 @@ class PastVuPhotoDataSource @Inject constructor(
     override suspend fun getHistoricalPhotos(
         lat: Double,
         lon: Double
-    ): List<HistoricalPhoto> {
+    ): PagingSource<Int, HistoricalPhoto> {
+
+        return object : PagingSource<Int, HistoricalPhoto>() {
+            override fun getRefreshKey(state: PagingState<Int, HistoricalPhoto>): Int? {
+                return state.anchorPosition?.let {
+                    anchorPosition ->
+                    state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
+                }
+            }
+
+            override suspend fun load(params: LoadParams<Int>): LoadResult<Int, HistoricalPhoto> {
+               val page = params.key ?: 1
+                Log.d("PAGING", "Загружаю страницу $page, размер: ${params.loadSize}")
+                Log.d("PhotoSource", "PastVu: загружаю фото для $lat, $lon, страница $page")
+                val pageSize = params.loadSize
+                val offset = (page - 1) * pageSize
+
+                val paramJson = buildPastVuParams(lat, lon, offset, pageSize)
+                Log.d("PAGING", "PastVu request: $paramJson")
+                val response = api.getNearestPhotos(paramsJson = paramJson)
+                Log.d("PAGING", "PastVu response photos count: ${response.result.photos.size}")
+
+                val photos = response.result.photos.map {
+                    pastVuPhoto ->
+                    HistoricalPhoto(
+                        id = pastVuPhoto.cid,
+                        title = pastVuPhoto.title,
+                        imageUrl = "https://img.pastvu.com/d/${pastVuPhoto.file}",
+                        year = pastVuPhoto.year?.toIntOrNull()
+                    )
+                }
+                val nextKey = if (photos.size == pageSize) page + 1 else null
+
+                return LoadResult.Page(
+                    data = photos,
+                    prevKey = if(page > 1) page - 1 else null,
+                    nextKey
+                )
+            }
+        }
+    }
+
+    private fun buildPastVuParams(lat: Double, lon: Double, offset: Int, limit: Int): String {
         val params = mapOf(
             "geo" to listOf(lat, lon),
             "distance" to 2000,
-            "limit" to 1000
+            "offset" to offset,
+            "limit" to limit
         )
-
-        val paramsJson = moshi.adapter(Map::class.java).toJson(params)
-
-        val response = api.getNearestPhotos(paramsJson = paramsJson)
-        return response.result.photos.map { photo ->
-            HistoricalPhoto(
-                id = photo.cid,
-                title = photo.title,
-                imageUrl = "https://img.pastvu.com/d/${photo.file}",
-                year = photo.year?.toIntOrNull()
-            )
-        }
+        return moshi.adapter(Map::class.java).toJson(params)
     }
 }

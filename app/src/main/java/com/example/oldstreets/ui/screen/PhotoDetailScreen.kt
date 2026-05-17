@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.oldstreets.domain.model.HistoricalPhoto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,24 +59,33 @@ fun PhotoDetailScreen(navController: NavController, photo: HistoricalPhoto) {
         }
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
         ) {
             AsyncImage(
-                model = photo.imageUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(photo.imageUrl)
+                    .crossfade(true)
+                    .addHeader(
+                        "User-Agent",
+                        "OldStreetsApp/1.0 (https://github.com/aterina216/OldStreets; ater.93@mail.ru)"
+                    )
+                    .build(),
                 contentDescription = photo.title,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
             )
             Surface(
-                modifier = Modifier.align(Alignment.BottomStart)
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
                     .padding(16.dp),
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     if (photo.year != null)
-                       Text("Год: ${photo.year}", style = MaterialTheme.typography.labelMedium)
+                        Text("Год: ${photo.year}", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
